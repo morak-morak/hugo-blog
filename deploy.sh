@@ -8,6 +8,7 @@ hugo -t PaperMod
 # Go To Public folder
 cd public
 # Add changes to git.
+git checkout main
 git add .
 
 # Commit changes.
