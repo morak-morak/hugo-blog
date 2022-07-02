@@ -11,14 +11,9 @@ git clone https://github.com/morak-morak/hugo-blog.git --recursive
 sh deploy.sh "commit message"
 ```
 
-## 3. 정적 사이트 생성
-**remote repository와 conflict날 수 있으니 반드시 public 디렉토리에서 pull을 한번 할 것**  
-hugo -t PaperMod
-
-## 4. 로컬 서버 
-**remote repository와 conflict날 수 있으니 반드시 public 디렉토리에서 pull을 한번 할 것**
+## 3. 로컬에서 확인하기
 ```bash
-hugo server -D 
+sh local.sh
 ```
 -> localhost:1313
 
