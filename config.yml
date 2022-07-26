@@ -54,7 +54,7 @@ params:
 
   label: # 아이콘
     text: "Home"
-    icon: /apple-touch-icon.png
+    icon: /morak-logo.png
     iconHeight: 35
 
   # profile-mode
