@@ -1,4 +1,4 @@
-name: Build & Deploy Blog
+name: Build & Deploy
 
 on:
   push:
