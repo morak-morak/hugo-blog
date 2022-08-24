@@ -11,7 +11,7 @@ author: '백엔드-차리'
 
 `hugo` 블로그는 보통 submodule을 기반으로 제작됩니다. `jekyll`의 경우 깃허브 자체에서 지원해주는 정적 사이트 생성기이기 때문에, 따로 빌드를 하지 않아도 됐던 것으로 기억합니다. 하지만 hugo는 그렇지 않습니다. 따라서 hugo 자체에서 지원해주는 기능으로 정적 사이트를 빌드한 뒤, 빌드 결과물을 깃허브에 업로드해야 합니다. 대개 다음과 같은 구조를 가집니다.
 
-![](/assets/images/2022-07-02-23-22-23.png)
+![](/assets/images/git-submodule-troubleshooting/2022-07-02-23-22-23.png)
 
 메인 모듈에서 테마를 include 해온 뒤, 블로그 글을 작성하고, static site를 생성한 뒤, 그 결과물을 github에 업로드하는 방식입니다. 제가 블로그를 생성한 상황에서는 위와 같이 메인, 그리고 public 이라는 빌드 결과물이 깃허브에 업로드된 상태였습니다. 앞으로 메인 모듈을 '메인', public을 '서브' 로 축약해서 이야기하도록 하겠습니다.
 
@@ -76,7 +76,7 @@ git clone ${main_repo} --recurse-submodules
 
 대충 다음과 같이 생겼습니다.
 
-![](/assets/images/2022-07-03-00-04-18.png)
+![](/assets/images/git-submodule-troubleshooting/2022-07-03-00-04-18.png)
 
 이 또한 submodule 의 특수성으로 인해 발생하는 문제입니다. 결론부터 말씀드리자면, '메인' 프로젝트에서 갖고 있는 submodule 의 정보는 '서브' 프로젝트(레포지토리) 자체가 아닌, '서브' 프로젝트의 '특정 commit-id' 를 갖고 있습니다. 
 
@@ -101,13 +101,13 @@ git push ${origin} ${branch}
 
 그림, 예시와 함께 문제 상황이 발생한 이유를 설명해보겠습니다. (아래 예시에서의 `push`는 말 그대로의 push를, `deploy`는 위 스크립트를 실행하는 것이라고 생각해주시면 되겠습니다. )
 
-![](/assets/images/2022-07-03-01-04-33.png)
+![](/assets/images/git-submodule-troubleshooting/2022-07-03-01-04-33.png)
 1. 팀원 '갑'이 로컬에서 '메인' repository에 '서브' repository를 submodule로 추가하고, '부모'의 repository에 deploy 했습니다.
 2. 그 순간, '메인' repository에서는 '서브' repository의 특정 commit-id(`SA`(sub-A)라고 하겠습니다)를 가져갑니다. (이 때 중요한 것은, '부모'의 repository에 push 할 때, '서브' repository는 push되지 않는다는 것입니다. '서브' repository는 별도로 push 과정을 거쳐야 하기 때문에 push가 아닌 deploy를 사용합니다.)
 3. 다음으로, 팀원 '을'이 부모 repository를 clone 해옵니다. 이 때, '서브' repository 또한 `--recursive` 옵션을 통해 가져왔습니다. 해당 옵션을 통해 가져왔기 때문에, '서브' repository의 `SA` 커밋을 가져와서, HEAD로 가리킵니다.    
 	3-1. 그런데 현재 '을'의 local에 있는 '서브'가 가리키고 있는 HEAD는 특정 브랜치가 아닙니다. 임시로 생성된 '커밋 브랜치'의 `SA` 커밋입니다.(커밋 브랜치는 임의로 붙인 이름입니다. 정확한 이름은 모르겠습니다.) 여기까지는 문제가 없습니다.
 
-![](/assets/images/2022-07-03-01-04-48.png)
+![](/assets/images/git-submodule-troubleshooting/2022-07-03-01-04-48.png)
 4. 이 상태에서, '을'이 '서브'에 새로운 파일을 추가하고, commit 합니다.(해당 commit-id 를 `SB`라고 하겠습니다.)  
    4-1. 그런데 이 `SB` commit-id 는 '서브'의 특정 브랜치 다음에 생긴 브랜치가 아닙니다. 위에서 언급한 임시의 '커밋 브랜치' 다음에 위치합니다.  
 5. 그리고 '을' 이 '메인' repository에 push합니다.   
@@ -117,7 +117,7 @@ git push ${origin} ${branch}
 
 그렇다면 "6~7번 사이에서 '서브' repository에 push 하면 되지 않나요?"(=7번에서 push가 아닌 deploy를 하면 되지 않나요?) 라고 의문을 제시할 수 있습니다만, 불가능합니다. 왜냐하면, 위 4번과 6번에서 말씀드렸다시피 commit의 위치가 특수한 곳에 존재하기 때문입니다. 따라서, push를 하려고 하면 다음과 같은 메시지를 볼 수 있습니다.
 
-![](/assets/images/2022-07-03-00-14-15.png)
+![](/assets/images/git-submodule-troubleshooting/2022-07-03-00-14-15.png)
 
 이를 해결하기 위한 방법은 간단합니다. '서브' repository에 push하기 전에, 브랜치를 바꿔주면 됩니다. 즉, 위 쉘 스크립트를 수정하면 다음과 같이 됩니다.
 
