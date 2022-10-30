@@ -16,15 +16,15 @@ draft: false
 
 이에 테스트 코드 커버리지를 정량적으로 측정하고 문서화를 할 수 있는 툴을 도입하기로 결정하고 jacoco 를 적용하였습니다.
 
-### jacoco 채택 이유
+## jacoco 채택 이유
 
 jacoco 적용 이전까지는 인텔리제이의 `Run with Coverage` 기능을 자주 사용하였습니다.
 
-하지만 쉽게 접근이 가능하다는 장점이 있었지만, 문서화가 어렵고 측정 기준을 세부화하기 힘들어 JaCoCo 도입을 결정하였습니다.
+해당 기능은 쉽게 접근이 가능하다는 장점이 있었지만, 문서화가 어렵고 측정 기준을 세부화하기 힘들어 JaCoCo 도입을 결정하였습니다.
 
 JaCoCo 를 채택한 이유는 다음과 같습니다.
 
-1. 문서화가 쉽습니다.
+1. 문서화가 쉽다.
 
 설정을 통해 측정된 결과를 html, xml 등의 파일 형태로 만들어낼 수 있습니다.
 
@@ -80,6 +80,9 @@ jacocoTestCoverageVerification {
 - jacoco {} 
   - jacoco plugin 에 대한 설정을 할 수 있습니다.
   - toolVersion 이외에도 reportsDirectory 를 설정할 수 있으며 기본값은 `$buildDir/reports/jacoco` 입니다.
+  - 기본 dir 로는 /build/reports/jacoco/test/html/index.html 에서 확인할 수 있습니다.
+
+![index_page.png](/assets/images/jacoco-configuration/index_page.png)
 
 jacoco plugin 에는 `jacocoTestReport` 와 `jacocoTestCoverageVerification` 두 가지 task 가 있습니다.
 
@@ -94,7 +97,7 @@ jacoco plugin 에는 `jacocoTestReport` 와 `jacocoTestCoverageVerification` 두
 
 규칙을 통과하지 못하면 build 가 실패합니다.
 
-![img.png](../../static/assets/images/jacoco-configuration/img.png)
+![build_fail.png](/assets/images/jacoco-configuration/build_fail.png)
 
 ## 두 task 를 한번에!
 
@@ -132,7 +135,7 @@ testCoverage 라는 task 를 만들고 해당 task 에서 위의 두 task 를 �
 
 jacocoTestCoverageVerification 에서 커버리지 기준을 자세하게 설정 자세하게 설정할 수 있습니다.
 
-다음은 모락 팀이 정의한 룰입니다.
+다음은 모락 팀이 회의를 통해 정의한 룰입니다.
 
 ```groovy
 tasks.named('jacocoTestCoverageVerification') {
@@ -201,13 +204,13 @@ violationRules 속성에서 rule 을 정의할 수 있으며, 여러 개의 rule
 
 ex)
 
-1. Package, method, COVEREDRATIO → 패키지의 메서드의 커버비율
+1. PACKAGE, METHOD, COVEREDRATIO → 패키지의 메서드의 커버비율
 2. METHOD, BRANCH, COVEREDRATIO → 메서드의 분기의 커버비율
 3. CLASS, LINE, TOTALCOUNT → 클래스의 라인의 총 갯수
 
 - includes
   - 각각의 rule 에서 지정된 element 를 기준으로, 포함할 element 를 지정할 수 있습니다.
-  - 기본 값은 모든 element 입니다([(*]).
+  - 기본 값은 모든 element 입니다([*]).
 
 - excludes
   - 각각의 rule 에서 지정된 element 를 기준으로, 제외할 element 를 지정할 수 있습니다.
@@ -218,7 +221,7 @@ ex)
 
 ### 메서드 제외하기
 
-![img_2.png](../../static/assets/images/jacoco-configuration/img_2.png)
+![rule_violation.png](/assets/images/jacoco-configuration/rule_violation.png)
 
 서비스 로직 상 equals 와 hashCode 를 재정의한 로직이 있는데, 굳이 테스트할 필요가 없어서 테스트 케이스에 추가하지 않았습니다.
 
@@ -226,9 +229,12 @@ ex)
 
 테스트 커버리지를 위해 불필요한 테스트 케이스를 추가하기보다는 해당 메서드를 측정에서 제외하기로 결정하였습니다.
 
-> 위의 rule 에서 exclude 할 수 있는 항목들로는 해당 exclude 설정이 포함되어 있는 rule 의 element 값입니다. 
+
+> 주의점!
+> 
+> 위의 rule 에서 exclude 할 수 있는 항목들로는 해당 exclude 설정이 포함되어 있는 rule 의 `element` 값입니다. 
 >
-> 해당 rule 의 element 값이 `CLASS` 이기때문에 해당 rule 에서 exclude 로는 `equals` 메서드를 제외할 수 없습니다.
+> 해당 rule 의 `element` 값은 `CLASS` 이기때문에 해당 rule 에서 exclude 로는 메서드인 `equals` 는 exclude 로 제외할 수 없습니다.
 
 JaCoCo 0.8.2 부터 `'Generated' 라는 이름이 포함` 되어있고 `RetentionPolicy 가 'CLASS' 또는 'Runtime'` 인 어노테이션이 붙어있으면 
 해당 Target 은 JaCoCo 측정에서 제외됩니다.
@@ -242,14 +248,18 @@ public @interface Generated {
 ```
 
 ```java
-    @Override
+@Override
 @Generated
 public boolean equals(Object o) {
         // ...
         }
 ```
 
-![img_3.png](../../static/assets/images/jacoco-configuration/img_3.png)
+결과!
+
+![after_Generated.png](/assets/images/jacoco-configuration/after_Generated.png)
+
+equals 와 hashCode 는 제외를 하였지만 아직 통과하지는 못한다.
 
 ### lombok 관련 제외하기
 
@@ -257,7 +267,7 @@ NoArgsConstructor, Getter 등의 lombok 어노테이션을 많이 이용하였�
 
 하지만 해당 lombok 관련 메서드들도 테스트 커버리지에서 잡혀 빌드가 실패하는 경우가 생겼습니다.
 
-이에 lombok.config 파일을 project 의 root path 에 생성하고 다음의 설정을 해줍니다.
+이에 프로젝트 루트 디렉토리 하위에 lombok.config 파일을 project 의 root path 에 생성하고 다음의 설정을 해주었습니다.
 
 ```lombok.config
 lombok.addLombokGeneratedAnnotation = true
@@ -273,8 +283,8 @@ PR 시 SonarQube 로 코드 정적 분석과 함께 JaCoCo 로 측정된 결과�
 
 앞서 설정한 4개의 규칙을 통과하지 못하면 build 에 실패하게 되고, SonarQube 에서도 전체적인 통과 기준을 80% 로 잡아 전체 코드에 대해서도 테스트 커버리지에 대해 측정할 수 있도록 하였습니다.
 
-![img_5.png](../../static/assets/images/jacoco-configuration/img_5.png)
+![build_passed_on_PR.png](/assets/images/jacoco-configuration/build_passed_on_PR.png)
 
-![img_6.png](../../static/assets/images/jacoco-configuration/img_6.png)
+![build_failed_on_PR.png](/assets/images/jacoco-configuration/build_failed_on_PR.png)
 
 이상으로 모락팀의 JaCoCo 적용기에 대해 알아보았습니다!
